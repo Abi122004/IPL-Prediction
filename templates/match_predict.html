@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>IPL 2025 Match Prediction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+      }
+
+      h1 {
+        text-align: center;
+        margin-top: 40px;
+        color: #2e4053;
+      }
+
+      h2 {
+        text-align: center;
+        margin-top: 40px;
+        color: #2e4053;
+      }
+
+      .container {
+        width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #ffffff;
+        box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #2e4053;
+        font-weight: bold;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #2e4053;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #34495e;
+      }
+
+      #result {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 3px;
+        text-align: center;
+      }
+
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+
+      .prediction-explanation {
+        margin: 15px 0;
+        padding: 12px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #2e4053;
+        border-radius: 3px;
+        font-style: italic;
+        color: #495057;
+      }
+
+      .prediction-explanation p {
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .prediction-result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 3px;
+        text-align: center;
+      }
+
+      .win-chance {
+        margin-top: 5px;
+        font-weight: bold;
+      }
+
+      .percentage {
+        font-weight: normal;
+      }
+
+      .winner {
+        font-weight: bold;
+      }
+
+      .explanation {
+        margin-top: 10px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>IPL 2025 Match Prediction</h1>
+    <div class="container">
+      <form id="predictionForm">
+        <div class="form-group">
+          <label for="team1">Team 1:</label>
+          <select id="team1" name="team1" required>
+            <option value="">Select Team 1</option>
+            {% for team in teams %}
+            <option value="{{ team }}">{{ team }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="team2">Team 2:</label>
+          <select id="team2" name="team2" required>
+            <option value="">Select Team 2</option>
+            {% for team in teams %}
+            <option value="{{ team }}">{{ team }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="venue">Venue:</label>
+          <select id="venue" name="venue" required>
+            <option value="">Select Venue</option>
+            <option value="M Chinnaswamy Stadium">M Chinnaswamy Stadium</option>
+            <option value="Wankhede Stadium">Wankhede Stadium</option>
+            <option value="MA Chidambaram Stadium">MA Chidambaram Stadium</option>
+            <option value="Arun Jaitley Stadium">Arun Jaitley Stadium</option>
+            <option value="Narendra Modi Stadium">Narendra Modi Stadium</option>
+            <option value="Eden Gardens">Eden Gardens</option>
+            <option value="Ekana Cricket Stadium">Ekana Cricket Stadium</option>
+            <option value="Punjab Cricket Association Stadium">Punjab Cricket Association Stadium</option>
+            <option value="Sawai Mansingh Stadium">Sawai Mansingh Stadium</option>
+            <option value="Rajiv Gandhi International Stadium">Rajiv Gandhi International Stadium</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="toss_winner">Toss Winner:</label>
+          <select id="toss_winner" name="toss_winner" required>
+            <option value="">Select Toss Winner</option>
+            {% for team in teams %}
+            <option value="{{ team }}">{{ team }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="toss_decision">Toss Decision:</label>
+          <select id="toss_decision" name="toss_decision" required>
+            <option value="">Select Toss Decision</option>
+            <option value="bat">Bat</option>
+            <option value="field">Field</option>
+          </select>
+        </div>
+
+        <button type="submit">Predict Winner</button>
+      </form>
+
+      <div id="result"></div>
+    </div>
+
+    <script>
+      document.getElementById('predictionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const team1 = document.getElementById('team1').value;
+        const team2 = document.getElementById('team2').value;
+        
+        if (team1 === team2) {
+          alert('Please select different teams');
+          return;
+        }
+
+        const formData = {
+          team1: team1,
+          team2: team2,
+          venue: document.getElementById('venue').value,
+          toss_winner: document.getElementById('toss_winner').value,
+          toss_decision: document.getElementById('toss_decision').value
+        };
+
+        fetch('/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          const resultDiv = document.getElementById('result');
+          resultDiv.className = 'success';
+          
+          // Get the percentage for the predicted winning team
+          let winningPercentage = "";
+          if (data.prediction === data.team1) {
+            winningPercentage = data.team1_probability;
+          } else if (data.prediction === data.team2) {
+            winningPercentage = data.team2_probability;
+          }
+          
+          resultDiv.innerHTML = `
+            <div class="prediction-result">
+              <h3>Predicted Winner: <span class="winner">${data.prediction}</span></h3>
+              <div class="win-chance">Win Chance: <span class="percentage">${winningPercentage}</span></div>
+              <p class="explanation">${data.explanation || ""}</p>
+            </div>
+          `;
+        })
+        .catch(error => {
+          const resultDiv = document.getElementById('result');
+          resultDiv.className = 'error';
+          resultDiv.innerHTML = 'Error: ' + error.message;
+        });
+      });
+    </script>
+  </body>
+</html>

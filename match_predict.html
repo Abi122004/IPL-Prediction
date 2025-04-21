@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPL Match Prediction</title>
+    <!-- Force browser to clear cache -->
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Bootstrap CSS with cache busting -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css?v={{ cache_bust_url() }}"
+      rel="stylesheet"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap?v={{ cache_bust_url() }}"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css?v={{ cache_bust_url() }}"
+    />
+    <!-- Custom CSS -->
+    <style>
+      :root {
+        --primary-color: #1e3799;
+        --secondary-color: #0c2461;
+        --accent-color: #f39c12;
+        --light-color: #f5f6fa;
+        --dark-color: #2c3e50;
+        --success-color: #2ecc71;
+      }
+
+      body {
+        font-family: "Montserrat", sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--light-color) 0%,
+          #e0e6ed 100%
+        );
+        color: var(--dark-color);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1000px;
+      }
+
+      .prediction-header {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .prediction-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2.5rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .prediction-header::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url("https://www.freepnglogos.com/uploads/cricket-png/cricket-ball-png-transparent-cricket-ball-images-5.png");
+        background-repeat: no-repeat;
+        background-size: 150px;
+        background-position: 95% center;
+        opacity: 0.1;
+        z-index: 0;
+      }
+
+      .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        margin-bottom: 20px;
+        background: white;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-header {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        font-weight: 600;
+        padding: 15px 20px;
+        border-bottom: none;
+      }
+
+      .card-body {
+        padding: 25px;
+      }
+
+      .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 8px;
+      }
+
+      .form-control,
+      .form-select {
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 16px;
+        border: 1px solid #dfe4ea;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+      }
+
+      .form-control:focus,
+      .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(30, 55, 153, 0.1);
+        border-color: var(--primary-color);
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .radio-container {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        border: 1px solid #dfe4ea;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .radio-container:hover {
+        background-color: rgba(30, 55, 153, 0.05);
+      }
+
+      .radio-container input[type="radio"] {
+        margin-right: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        width: 100%;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 14px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(
+          90deg,
+          var(--secondary-color),
+          var(--primary-color)
+        );
+      }
+
+      .prediction-result {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.5s ease-out;
+        position: relative;
+        overflow: hidden;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .team-logo {
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+        border-radius: 50%;
+        background-color: white;
+        padding: 5px;
+      }
+
+      .vs-badge {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+        margin: 0 10px;
+      }
+
+      .win-percentage {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--success-color);
+        animation: pulse 2s infinite;
+        display: inline-block;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .prediction-metrics {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .metrics-title,
+      .factors-title {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      /* Prediction Container Styling */
+      .prediction-container {
+        padding: 15px;
+        animation: fadeIn 0.8s;
+      }
+
+      .team-prediction-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .team-box {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+      }
+
+      .team-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .team-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .probability-bar {
+        height: 8px;
+        background: var(--accent-color);
+        border-radius: 4px;
+        margin: 5px 0;
+        transition: width 1.5s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .win-percentage {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-top: 5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 2;
+      }
+
+      .vs-container {
+        width: 50px;
+        height: 50px;
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin: 0 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 2;
+      }
+
+      .draw-box {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .draw-label {
+        font-weight: 600;
+      }
+
+      .draw-percentage {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--accent-color);
+      }
+
+      .prediction-winner {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.05)
+        );
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .prediction-winner::before {
+        content: "🏆";
+        position: absolute;
+        font-size: 4rem;
+        opacity: 0.1;
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%);
+      }
+
+      .winner-label {
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
+
+      .winner-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        position: relative;
+        z-index: 1;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+      }
+
+      .metric-box {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s;
+      }
+
+      .metric-box:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-3px);
+      }
+
+      .metric-label {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+      }
+
+      .metric-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--accent-color);
+      }
+
+      .note {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .deciding-factors {
+        margin-top: 25px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 15px;
+      }
+
+      .factors-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .factor {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .factor:last-child {
+        border-bottom: none;
+      }
+
+      .factor i {
+        font-size: 1.2rem;
+        margin-right: 15px;
+        color: var(--accent-color);
+        width: 25px;
+        text-align: center;
+      }
+
+      /* Team-specific styling */
+      .team1 {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.15),
+          rgba(255, 255, 255, 0.05)
+        );
+        border-right: 3px solid var(--accent-color);
+      }
+
+      .team2 {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.15)
+        );
+        border-left: 3px solid var(--accent-color);
+      }
+
+      /* Team colors */
+      .team-mi {
+        color: #004ba0;
+      }
+      .team-csk {
+        color: #f9cd05;
+      }
+      .team-rcb {
+        color: #d1171b;
+      }
+      .team-kkr {
+        color: #3a225d;
+      }
+      .team-dc {
+        color: #00008b;
+      }
+      .team-srh {
+        color: #ff822a;
+      }
+      .team-rr {
+        color: #ff1493;
+      }
+      .team-pbks {
+        color: #af1e2d;
+      }
+
+      footer {
+        background: linear-gradient(
+          90deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        text-align: center;
+        padding: 15px 0;
+        margin-top: 50px;
+        border-radius: 0 0 10px 10px;
+      }
+
+      /* Responsive adjustments for prediction display */
+      @media (max-width: 768px) {
+        .prediction-header h1 {
+          font-size: 1.8rem;
+        }
+
+        .radio-group {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .card-body {
+          padding: 15px;
+        }
+
+        .team-prediction-row {
+          flex-direction: column;
+          gap: 30px;
+        }
+
+        .vs-container {
+          margin: 15px 0;
+        }
+
+        .metrics-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Cricket animation */
+      .cricket-ball {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background: url("https://www.freepnglogos.com/uploads/cricket-png/cricket-ball-png-transparent-cricket-ball-images-5.png")
+          no-repeat center center/contain;
+        animation: spin 4s linear infinite;
+        opacity: 0.2;
+        z-index: 0;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg) translate(0, 0);
+        }
+        25% {
+          transform: rotate(90deg) translate(50px, 50px);
+        }
+        50% {
+          transform: rotate(180deg) translate(100px, 0);
+        }
+        75% {
+          transform: rotate(270deg) translate(50px, -50px);
+        }
+        100% {
+          transform: rotate(360deg) translate(0, 0);
+        }
+      }
+
+      #ball1 {
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+      #ball2 {
+        top: 20%;
+        right: 10%;
+        animation-delay: -1s;
+      }
+      #ball3 {
+        bottom: 10%;
+        left: 20%;
+        animation-delay: -2s;
+      }
+
+      .team-selection {
+        position: relative;
+      }
+
+      .team-selection::after {
+        content: "VS";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: var(--accent-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: bold;
+      }
+
+      /* Prediction Display Styles */
+      .prediction-container {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .team-prediction-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .team-box {
+        flex: 1;
+        padding: 15px;
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .team1 {
+        margin-right: 10px;
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .team2 {
+        margin-left: 10px;
+        border-left: 4px solid var(--accent-color);
+      }
+
+      .vs-container {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--accent-color)
+        );
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+      }
+
+      .team-name {
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        z-index: 1;
+        color: #333;
+      }
+
+      .probability-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 6px;
+        background: linear-gradient(
+          to right,
+          var(--primary-color),
+          var(--accent-color)
+        );
+        transition: width 1s ease-in-out;
+        opacity: 0.7;
+      }
+
+      .win-percentage {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-top: 5px;
+        z-index: 1;
+      }
+
+      .draw-box {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-left: 4px solid #6c757d;
+      }
+
+      .draw-label {
+        font-weight: bold;
+        color: #555;
+      }
+
+      .draw-percentage {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #6c757d;
+      }
+
+      .prediction-winner {
+        background: linear-gradient(
+          135deg,
+          rgba(var(--primary-rgb), 0.1),
+          rgba(var(--accent-rgb), 0.1)
+        );
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-left: 4px solid gold;
+      }
+
+      .winner-label {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .winner-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #28a745;
+        display: flex;
+        align-items: center;
+      }
+
+      .winner-name:before {
+        content: "🏆";
+        margin-right: 5px;
+      }
+
+      .prediction-metrics {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .metrics-title {
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 10px;
+      }
+
+      .metric-box {
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .metric-label {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 5px;
+      }
+
+      .metric-value {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .note {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      .deciding-factors {
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .factors-title {
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .factors-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .factor {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .factor:last-child {
+        border-bottom: none;
+      }
+
+      .factor i {
+        font-size: 1.2rem;
+        margin-right: 15px;
+        color: var(--primary-color);
+        width: 20px;
+        text-align: center;
+      }
+
+      /* Animation for prediction results */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .prediction-container {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      /* Apply team colors to boxes */
+      [data-team="Chennai Super Kings"] {
+        border-color: #f2c01e !important;
+      } /* Yellow */
+      [data-team="Mumbai Indians"] {
+        border-color: #004ba0 !important;
+      } /* Blue */
+      [data-team="Royal Challengers Bangalore"] {
+        border-color: #ec1c24 !important;
+      } /* Red */
+      [data-team="Kolkata Knight Riders"] {
+        border-color: #2e0854 !important;
+      } /* Purple */
+      [data-team="Delhi Capitals"] {
+        border-color: #0078bc !important;
+      } /* Blue */
+      [data-team="Sunrisers Hyderabad"] {
+        border-color: #ff822a !important;
+      } /* Orange */
+      [data-team="Punjab Kings"] {
+        border-color: #ed1c24 !important;
+      } /* Red */
+      [data-team="Rajasthan Royals"] {
+        border-color: #254aa5 !important;
+      } /* Blue */
+      [data-team="Gujarat Titans"] {
+        border-color: #1c1c1c !important;
+      } /* Black */
+      [data-team="Lucknow Super Giants"] {
+        border-color: #a72056 !important;
+      } /* Turquoise */
+    </style>
+  </head>
+  <body>
+    <div class="container pt-4 pb-4">
+      <div class="prediction-header">
+        <h1><i class="fas fa-trophy"></i> IPL Match Winner Prediction</h1>
+      </div>
+
+      <!-- Cricket ball animations -->
+      <div class="cricket-ball" id="ball1"></div>
+      <div class="cricket-ball" id="ball2"></div>
+      <div class="cricket-ball" id="ball3"></div>
+
+      <form action="{{ url_for('predict') }}" method="post">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-users"></i> Team Information
+              </div>
+              <div class="card-body">
+                <div class="row team-selection">
+                  <div class="col-md-6">
+                    <label for="team1" class="form-label">Team 1</label>
+                    <select
+                      name="team1"
+                      id="team1"
+                      class="form-select"
+                      required
+                      onchange="updateTossWinner()"
+                    >
+                      <option value="" selected disabled>Select Team 1</option>
+                      <option value="Mumbai Indians">Mumbai Indians</option>
+                      <option value="Chennai Super Kings">
+                        Chennai Super Kings
+                      </option>
+                      <option value="Royal Challengers Bangalore">
+                        Royal Challengers Bangalore
+                      </option>
+                      <option value="Kolkata Knight Riders">
+                        Kolkata Knight Riders
+                      </option>
+                      <option value="Delhi Capitals">Delhi Capitals</option>
+                      <option value="Sunrisers Hyderabad">
+                        Sunrisers Hyderabad
+                      </option>
+                      <option value="Rajasthan Royals">Rajasthan Royals</option>
+                      <option value="Kings XI Punjab">Kings XI Punjab</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="team2" class="form-label">Team 2</label>
+                    <select
+                      name="team2"
+                      id="team2"
+                      class="form-select"
+                      required
+                      onchange="updateTossWinner()"
+                    >
+                      <option value="" selected disabled>Select Team 2</option>
+                      <option value="Mumbai Indians">Mumbai Indians</option>
+                      <option value="Chennai Super Kings">
+                        Chennai Super Kings
+                      </option>
+                      <option value="Royal Challengers Bangalore">
+                        Royal Challengers Bangalore
+                      </option>
+                      <option value="Kolkata Knight Riders">
+                        Kolkata Knight Riders
+                      </option>
+                      <option value="Delhi Capitals">Delhi Capitals</option>
+                      <option value="Sunrisers Hyderabad">
+                        Sunrisers Hyderabad
+                      </option>
+                      <option value="Rajasthan Royals">Rajasthan Royals</option>
+                      <option value="Kings XI Punjab">Kings XI Punjab</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-map-marker-alt"></i> Match Venue
+              </div>
+              <div class="card-body">
+                <label for="venue" class="form-label">Stadium/Venue</label>
+                <select name="venue" id="venue" class="form-select" required>
+                  <option value="" selected disabled>Select Venue</option>
+                  <option
+                    value="M Chinnaswamy Stadium (Bangalore)"
+                    data-city="Bangalore"
+                  >
+                    M Chinnaswamy Stadium (Bangalore)
+                  </option>
+                  <option value="Eden Gardens (Kolkata)" data-city="Kolkata">
+                    Eden Gardens (Kolkata)
+                  </option>
+                  <option value="Wankhede Stadium (Mumbai)" data-city="Mumbai">
+                    Wankhede Stadium (Mumbai)
+                  </option>
+                  <option
+                    value="MA Chidambaram Stadium (Chennai)"
+                    data-city="Chennai"
+                  >
+                    MA Chidambaram Stadium (Chennai)
+                  </option>
+                  <option
+                    value="Arun Jaitley Stadium (Delhi)"
+                    data-city="Delhi"
+                  >
+                    Arun Jaitley Stadium (Delhi)
+                  </option>
+                  <option
+                    value="Rajiv Gandhi Stadium (Hyderabad)"
+                    data-city="Hyderabad"
+                  >
+                    Rajiv Gandhi Stadium (Hyderabad)
+                  </option>
+                  <option
+                    value="Narendra Modi Stadium (Ahmedabad)"
+                    data-city="Ahmedabad"
+                  >
+                    Narendra Modi Stadium (Ahmedabad)
+                  </option>
+                  <option
+                    value="Sawai Mansingh Stadium (Jaipur)"
+                    data-city="Jaipur"
+                  >
+                    Sawai Mansingh Stadium (Jaipur)
+                  </option>
+                  <option
+                    value="Punjab Cricket Association Stadium (Mohali)"
+                    data-city="Mohali"
+                  >
+                    Punjab Cricket Association Stadium (Mohali)
+                  </option>
+                  <option value="DY Patil Stadium (Mumbai)" data-city="Mumbai">
+                    DY Patil Stadium (Mumbai)
+                  </option>
+                </select>
+
+                <!-- Hidden city field -->
+                <input type="hidden" name="city" id="city" />
+
+                <label for="neutral_venue" class="form-label mt-3"
+                  >Neutral Venue?</label
+                >
+                <div class="radio-group">
+                  <label class="radio-container">
+                    <input type="radio" name="neutral_venue" value="1" /> Yes
+                  </label>
+                  <label class="radio-container">
+                    <input
+                      type="radio"
+                      name="neutral_venue"
+                      value="0"
+                      checked
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-coins"></i> Toss Information
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="toss_winner" class="form-label"
+                      >Toss Winner</label
+                    >
+                    <select
+                      name="toss_winner"
+                      id="toss_winner"
+                      class="form-select"
+                      required
+                    >
+                      <option value="" selected disabled>
+                        Select Toss Winner
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="toss_decision" class="form-label"
+                      >Toss Decision</label
+                    >
+                    <div class="radio-group">
+                      <label class="radio-container">
+                        <input
+                          type="radio"
+                          name="toss_decision"
+                          value="bat"
+                          checked
+                        />
+                        Bat
+                      </label>
+                      <label class="radio-container">
+                        <input
+                          type="radio"
+                          name="toss_decision"
+                          value="field"
+                        />
+                        Field
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <i class="fas fa-user"></i> Match Officials
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="umpire1" class="form-label">Umpire 1</label>
+                    <input
+                      type="text"
+                      name="umpire1"
+                      id="umpire1"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6">
+                    <label for="umpire2" class="form-label">Umpire 2</label>
+                    <input
+                      type="text"
+                      name="umpire2"
+                      id="umpire2"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-magic"></i> Predict Match Winner
+          </button>
+        </div>
+      </form>
+
+      {% if prediction %}
+      <div class="prediction-result">
+        <h2 class="text-center mb-4">Match Prediction</h2>
+        <div class="text-center mb-3">{{ prediction|safe }}</div>
+      </div>
+      {% endif %}
+
+      <footer class="mt-5">
+        <div class="container">
+          <p class="mb-0">
+            &copy; 2023 IPL Match Winner Prediction | Powered by Machine
+            Learning
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Bootstrap and jQuery with cache busting -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js?v={{ cache_bust_url() }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js?v={{ cache_bust_url() }}"></script>
+
+    <script>
+      // Function to force reload the page if CSS is not applied properly
+      window.onload = function () {
+        // Check if a key CSS class is properly styled
+        const card = document.querySelector(".card");
+        if (card && window.getComputedStyle(card).boxShadow === "none") {
+          // CSS not loaded properly, force reload
+          console.log("CSS not loaded properly, forcing reload...");
+          window.location.reload(true);
+        }
+
+        // Apply team colors to team boxes if prediction exists
+        const teamBoxes = document.querySelectorAll(".team-box");
+        if (teamBoxes.length > 0) {
+          teamBoxes.forEach((box) => {
+            const teamName = box.getAttribute("data-team");
+            if (teamName) {
+              // Set border color based on team
+              switch (teamName) {
+                case "Chennai Super Kings":
+                  box.style.borderLeftColor = "#f2c01e"; // Yellow
+                  break;
+                case "Mumbai Indians":
+                  box.style.borderLeftColor = "#004ba0"; // Blue
+                  break;
+                case "Royal Challengers Bangalore":
+                  box.style.borderLeftColor = "#ec1c24"; // Red
+                  break;
+                case "Kolkata Knight Riders":
+                  box.style.borderLeftColor = "#2e0854"; // Purple
+                  break;
+                case "Delhi Capitals":
+                  box.style.borderLeftColor = "#0078bc"; // Blue
+                  break;
+                case "Sunrisers Hyderabad":
+                  box.style.borderLeftColor = "#ff822a"; // Orange
+                  break;
+                case "Punjab Kings":
+                case "Kings XI Punjab":
+                  box.style.borderLeftColor = "#ed1c24"; // Red
+                  break;
+                case "Rajasthan Royals":
+                  box.style.borderLeftColor = "#254aa5"; // Blue
+                  break;
+                case "Gujarat Titans":
+                  box.style.borderLeftColor = "#1c1c1c"; // Black
+                  break;
+                case "Lucknow Super Giants":
+                  box.style.borderLeftColor = "#a72056"; // Turquoise
+                  break;
+                default:
+                  // Default color if team not recognized
+                  box.style.borderLeftColor = "#666666";
+              }
+            }
+          });
+        }
+      };
+
+      // Function to update the city based on venue selection
+      $(document).ready(function () {
+        $("#venue").change(function () {
+          var selectedVenue = $(this).find(":selected");
+          var city = selectedVenue.data("city");
+          $("#city").val(city);
+        });
+
+        // Trigger on page load if venue is already selected
+        if ($("#venue").val()) {
+          var selectedVenue = $("#venue").find(":selected");
+          var city = selectedVenue.data("city");
+          $("#city").val(city);
+        }
+      });
+
+      // Function to update toss winner dropdown based on selected teams
+      function updateTossWinner() {
+        var team1 = document.getElementById("team1").value;
+        var team2 = document.getElementById("team2").value;
+        var tossWinnerSelect = document.getElementById("toss_winner");
+
+        // Clear previous options
+        tossWinnerSelect.innerHTML =
+          '<option value="" disabled selected>Select Toss Winner</option>';
+
+        // Add teams to toss winner dropdown
+        if (team1) {
+          var option = document.createElement("option");
+          option.value = team1;
+          option.textContent = team1;
+          tossWinnerSelect.appendChild(option);
+        }
+
+        if (team2) {
+          var option = document.createElement("option");
+          option.value = team2;
+          option.textContent = team2;
+          tossWinnerSelect.appendChild(option);
+        }
+      }
+
+      // Format the prediction result (if needed)
+      $(document).ready(function () {
+        if ($(".prediction-result").length) {
+          // Apply styling to teams and percentages if needed
+          // This could be enhanced with team logos and better formatting
+        }
+      });
+    </script>
+  </body>
+</html>
